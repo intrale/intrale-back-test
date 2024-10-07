@@ -1,0 +1,9 @@
+[versions]
+com-amazonaws-aws-lambda-java-core = "1.2.1"
+com-amazonaws-aws-lambda-java-events = "3.11.4"
+com-amazonaws-aws-lambda-java-log4j = "1.0.1"
+
+[libraries]
+aws-lambda-java-core = { module = "com.amazonaws:aws-lambda-java-core", version.ref = "com-amazonaws-aws-lambda-java-core" }
+aws-lambda-java-events = { module = "com.amazonaws:aws-lambda-java-events", version.ref = "com-amazonaws-aws-lambda-java-events" }
+aws-lambda-java-log4j = { module = "com.amazonaws:aws-lambda-java-log4j", version.ref = "com-amazonaws-aws-lambda-java-log4j" }
