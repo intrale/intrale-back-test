@@ -24,4 +24,4 @@ jobs:
           FEATURE: ${{ env.FEATURE }}
           COMPILE_NUMBER: ${{ env.COMPILE_NUMBER }}
         run: |
-          gradlew
+          ./gradlew
