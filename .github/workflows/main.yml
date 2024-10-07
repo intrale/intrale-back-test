@@ -10,7 +10,7 @@ jobs:
     steps:
 
       - name: Download source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: JDK Setup
         uses: actions/setup-java@v2
         with:
@@ -18,10 +18,7 @@ jobs:
           distribution: 'temurin'
           java-package: jdk # (jre, jdk, or jdk+fx) - defaults to jdk
           architecture: x64 # (x64 or x86) - defaults to x64
-      - name: Compile
-        env:
-          VERSION: ${{ env.VERSION }}
-          FEATURE: ${{ env.FEATURE }}
-          COMPILE_NUMBER: ${{ env.COMPILE_NUMBER }}
-        run: |
-          ./gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Build with Gradle
+        run: ./gradlew build
