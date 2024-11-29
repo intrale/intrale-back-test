@@ -7,8 +7,12 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = "com.example"
+group = "ar.com.intrale"
 version = "0.0.1"
+
+val kodeinVersion = "7.22.0"
+val canardVersion = "1.2.0"
+val konformVersion = "0.6.1"
 
 application {
     mainClass.set("ar.com.intrale.ApplicationKt")
@@ -34,7 +38,23 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
+    //
+
+    // AWS Lambdas
     implementation(libs.aws.lambda.java.core)
     implementation(libs.aws.lambda.java.events)
     implementation(libs.aws.lambda.java.log4j)
+
+    implementation("aws.sdk.kotlin:cognitoidentityprovider:1.2.28")
+    implementation("aws.sdk.kotlin:cognitoidentity:1.2.28")
+    implementation("aws.sdk.kotlin:secretsmanager:1.2.28")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // Validations
+    implementation("io.konform:konform:$konformVersion")
+
+    // Kodein
+    implementation("org.kodein.di:kodein-di:$kodeinVersion")
+    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
 }

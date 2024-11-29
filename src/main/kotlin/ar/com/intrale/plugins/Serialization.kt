@@ -6,7 +6,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureSerialization() {
+/*fun Application.configureSerialization() {
     install(ContentNegotiation) {
         gson {
         }
@@ -19,4 +19,4 @@ fun Application.configureSerialization() {
     }
 }
 
-data class Response (val greetings: String)
+data class Response (val greetings: String)*/

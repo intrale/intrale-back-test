@@ -1,2 +1,2 @@
-rootProject.name = "intraleBack"
+rootProject.name = "users"
 
