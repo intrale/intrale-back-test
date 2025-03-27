@@ -4,6 +4,7 @@ package ar.com.intrale
 //import ar.com.intrale.plugins.configureRouting
 //import ar.com.intrale.plugins.configureSerialization
 import com.google.gson.Gson
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -39,6 +40,15 @@ fun main() {
 
                 val functionResponse = FunctionImpl().execute("")
                 call.respondText(Gson().toJson(functionResponse))
+            }
+            options {
+                /*responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_ORIGIN, FunctionConst.ALL);
+                responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_METHODS, FunctionConst.GET_OPTIONS_HEAD_PUT_POST);
+                responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_HEADERS, FunctionConst.ALLOW_HEADERS_AVAIABLES);*/
+                call.response.headers.append("Access-Control-Allow-Origin", "*")
+                call.response.headers.append("Access-Control-Allow-Methods", "GET, OPTIONS, HEAD, PUT, POST")
+                call.response.headers.append("Access-Control-Allow-Headers", "Content-Type,Accept,Referer,User-Agent,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Access-Control-Allow-Headers,function,idToken,businessName,filename")
+                call.respond(HttpStatusCode.OK)
             }
         }
 
@@ -81,9 +91,11 @@ fun Application.configureRouting() {
     routing {
         post ("/"){
             val di = call.closestDI()
+
             val function by di.instance<FunctionImpl>()
 
             val functionResponse = function.execute(call.receiveText())
+
             call.respondText(Gson().toJson(functionResponse))
         }
         get("/") {
@@ -92,6 +104,15 @@ fun Application.configureRouting() {
 
             val functionResponse = FunctionImpl().execute("")
             call.respondText(Gson().toJson(functionResponse))
+        }
+        options {
+            /*responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_ORIGIN, FunctionConst.ALL);
+            responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_METHODS, FunctionConst.GET_OPTIONS_HEAD_PUT_POST);
+            responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_HEADERS, FunctionConst.ALLOW_HEADERS_AVAIABLES);*/
+            call.response.headers.append("Access-Control-Allow-Origin", "*")
+            call.response.headers.append("Access-Control-Allow-Methods", "GET, OPTIONS, HEAD, PUT, POST")
+            call.response.headers.append("Access-Control-Allow-Headers", "Content-Type,Accept,Referer,User-Agent,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Access-Control-Allow-Headers,function,idToken,businessName,filename")
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

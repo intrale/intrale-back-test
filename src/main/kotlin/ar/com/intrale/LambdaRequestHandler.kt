@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
+
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
 import org.kodein.di.instance
@@ -12,19 +13,33 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
 
 
     override fun handleRequest(requestEvent: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent  = APIGatewayProxyResponseEvent().apply {
-        body = "Hello from Kotlin Code"
 
         val di = DI {
             import(appModule)
         }
 
         if (requestEvent != null) {
+            var response = APIGatewayProxyResponseEvent()
             var httpMehtod = requestEvent.httpMethod
-            val function by di.instance<FunctionImpl>()
-            runBlocking {
+            if (httpMehtod == "OPTIONS" ) {
+                val map = mutableMapOf<String, String>()
+                map["Access-Control-Allow-Origin"] = "*"
+                map["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD, PUT, POST"
+                map["Access-Control-Allow-Headers"] = "Content-Type,Accept,Referer,User-Agent,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Access-Control-Allow-Headers,function,idToken,businessName,filename"
+                response.headers = map
 
-                function.execute(requestEvent.body)
+                response.statusCode = 200
             }
+
+            if ((httpMehtod == "GET") || (httpMehtod == "OPTIONS")) {
+                val function by di.instance<FunctionImpl>()
+                runBlocking {
+                    function.execute(requestEvent.body)
+                    body = "Hello from Kotlin Code"
+                }
+            }
+
+
         }
 
 
