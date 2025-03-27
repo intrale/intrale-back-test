@@ -19,19 +19,19 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
         }
 
         if (requestEvent != null) {
-            var response = APIGatewayProxyResponseEvent()
+            //var response = APIGatewayProxyResponseEvent()
             var httpMehtod = requestEvent.httpMethod
             if (httpMehtod == "OPTIONS" ) {
                 val map = mutableMapOf<String, String>()
                 map["Access-Control-Allow-Origin"] = "*"
                 map["Access-Control-Allow-Methods"] = "GET, OPTIONS, HEAD, PUT, POST"
                 map["Access-Control-Allow-Headers"] = "Content-Type,Accept,Referer,User-Agent,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Access-Control-Allow-Headers,function,idToken,businessName,filename"
-                response.headers = map
+                headers = map
 
-                response.statusCode = 200
+                statusCode = 200
             }
 
-            if ((httpMehtod == "GET") || (httpMehtod == "OPTIONS")) {
+            if (httpMehtod == "GET"){
                 val function by di.instance<FunctionImpl>()
                 runBlocking {
                     function.execute(requestEvent.body)
