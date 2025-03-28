@@ -35,16 +35,7 @@ fun main() {
                 val functionResponse = function.execute(call.receiveText())
                 call.respondText(Gson().toJson(functionResponse))
             }
-            get("/") {
-                val function by closestDI().instance<Function>(tag = "function")
-
-                val functionResponse = FunctionImpl().execute("")
-                call.respondText(Gson().toJson(functionResponse))
-            }
             options {
-                /*responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_ORIGIN, FunctionConst.ALL);
-                responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_METHODS, FunctionConst.GET_OPTIONS_HEAD_PUT_POST);
-                responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_HEADERS, FunctionConst.ALLOW_HEADERS_AVAIABLES);*/
                 call.response.headers.append("Access-Control-Allow-Origin", "*")
                 call.response.headers.append("Access-Control-Allow-Methods", "GET, OPTIONS, HEAD, PUT, POST")
                 call.response.headers.append("Access-Control-Allow-Headers", "Content-Type,Accept,Referer,User-Agent,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Access-Control-Allow-Headers,function,idToken,businessName,filename")
@@ -55,64 +46,5 @@ fun main() {
     }.start(wait = true)
 }
 
-fun Application.module() {
-    //configureMonitoring()
-    //configureSerialization()
-    /*val di = DI {
-        import(businessFunctionModule)
-        import(appModule)
-    }*/
-    //(environment.config as DIAware).di = di
-    configureRouting()
-}
-
-/*fun Application.configureMonitoring() {
-    install(CallLogging) {
-        level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
-    }
-}
-
-fun Application.configureSerialization() {
-    install(ContentNegotiation) {
-        gson {
-        }
-    }
-    routing {
-        get("/json/gson") {
-            //call.respond(mapOf("hello" to "world"))
-            call.respond(Response("Hello World"))
-        }
-    }
-}*/
 
 
-fun Application.configureRouting() {
-    routing {
-        post ("/"){
-            val di = call.closestDI()
-
-            val function by di.instance<FunctionImpl>()
-
-            val functionResponse = function.execute(call.receiveText())
-
-            call.respondText(Gson().toJson(functionResponse))
-        }
-        get("/") {
-            val di = call.closestDI()
-            val function by di.instance<FunctionImpl>()
-
-            val functionResponse = FunctionImpl().execute("")
-            call.respondText(Gson().toJson(functionResponse))
-        }
-        options {
-            /*responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_ORIGIN, FunctionConst.ALL);
-            responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_METHODS, FunctionConst.GET_OPTIONS_HEAD_PUT_POST);
-            responseHeaders.put(FunctionConst.ACCESS_CONTROL_ALLOW_HEADERS, FunctionConst.ALLOW_HEADERS_AVAIABLES);*/
-            call.response.headers.append("Access-Control-Allow-Origin", "*")
-            call.response.headers.append("Access-Control-Allow-Methods", "GET, OPTIONS, HEAD, PUT, POST")
-            call.response.headers.append("Access-Control-Allow-Headers", "Content-Type,Accept,Referer,User-Agent,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,Access-Control-Allow-Headers,function,idToken,businessName,filename")
-            call.respond(HttpStatusCode.OK)
-        }
-    }
-}
