@@ -62,4 +62,7 @@ dependencies {
     // Kodein
     implementation("org.kodein.di:kodein-di:$kodeinVersion")
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
+
+    // Faker
+    implementation("net.datafaker:datafaker:2.4.2")
 }

@@ -1,6 +1,7 @@
 package ar.com.intrale
 
 import com.typesafe.config.ConfigFactory
+import net.datafaker.Faker
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -16,8 +17,15 @@ val appModule = DI.Module("appModule") {
             Config(
                 businesses = configFactory.getString("app.avaiableBusinesses").split(",").toSet(),
                 region = configFactory.getString("aws.region"),
+                awsCognitoUserPoolId = configFactory.getString("aws.cognito.userPoolId"),
                 awsCognitoClientId = configFactory.getString("aws.cognito.clientId"),
             )
+        }
+    }
+
+    bind<Faker> {
+        singleton  {
+            Faker()
         }
     }
 
@@ -26,10 +34,10 @@ val appModule = DI.Module("appModule") {
     }
 
     bind<Function> (tag="signup") {
-        singleton {   SignUp(instance()) }
+        singleton {   SignUp(instance(), instance(), instance()) }
     }
     bind<Function> (tag="signin") {
-        singleton {   SignIn() }
+        singleton {   SignIn(instance(), instance(), instance()) }
     }
 
 }

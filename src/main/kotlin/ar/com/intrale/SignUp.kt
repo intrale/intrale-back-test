@@ -8,8 +8,13 @@ import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
 import io.konform.validation.jsonschema.minLength
 import io.konform.validation.jsonschema.pattern
+import net.datafaker.Faker
+import net.datafaker.providers.base.Text
+import net.datafaker.providers.base.Text.DIGITS
+import net.datafaker.providers.base.Text.EN_UPPERCASE
+import org.slf4j.Logger
 
-class SignUp (val config: Config): Function {
+class SignUp (val config: Config, val faker: Faker, val logger: Logger): Function {
 
     override suspend fun execute(textBody:String): Response {
 
@@ -33,10 +38,6 @@ class SignUp (val config: Config): Function {
 
         if (validationResult.isValid){
 
-            //val clientIdVal: String = "11pm8ug3bletqjvdl4omvig43u"
-            //val secretKey: String = "2i0k4EloPyS2aTsW+YsuxFgTE9vauyCc8bZZeljf"
-            //val usernameVal: String = "usuario1"
-            val passwordVal: String = "Prueba#1"
             val email: String = body.email
 
             val attributeType =
@@ -47,15 +48,16 @@ class SignUp (val config: Config): Function {
 
             val attrs = mutableListOf<AttributeType>()
             attrs.add(attributeType)
-            //val secretVal = calculateSecretHash(clientIdVal, secretKey, /*usernameVal*/ email)
 
             val request =
                 SignUpRequest {
                     userAttributes = attrs
                     username = email
-                    clientId = /*clientIdVal*/ config.awsCognitoClientId
-                    password = passwordVal
-                    //secretHash = secretVal
+                    clientId = config.awsCognitoClientId
+                    password = faker.text().text(Text.TextSymbolsBuilder.builder()
+                        .len(8)
+                        .with(EN_UPPERCASE, 2)
+                        .with(DIGITS, 3).build())
                 }
 
             try {
@@ -75,34 +77,10 @@ class SignUp (val config: Config): Function {
 
         var errorsMessage: String = ""
         validationResult.errors.forEach {
-            errorsMessage += ' ' + it.message
+            errorsMessage += it.dataPath.substring(1) + ' ' + it.message
         }
 
         return RequestValidationException(errorsMessage)
     }
-
-
-   /* fun calculateSecretHash(
-        userPoolClientId: String,
-        userPoolClientSecret: String,
-        userName: String,
-    ): String {
-        val macSha256Algorithm = "HmacSHA256"
-        val signingKey =
-            SecretKeySpec(
-                userPoolClientSecret.toByteArray(StandardCharsets.UTF_8),
-                macSha256Algorithm,
-            )
-        try {
-            val mac = Mac.getInstance(macSha256Algorithm)
-            mac.init(signingKey)
-            mac.update(userName.toByteArray(StandardCharsets.UTF_8))
-            val rawHmac = mac.doFinal(userPoolClientId.toByteArray(StandardCharsets.UTF_8))
-            return Base64.getEncoder().encodeToString(rawHmac)
-        } catch (e: UnsupportedEncodingException) {
-            println(e.message)
-        }
-        return ""
-    } */
 
 }
