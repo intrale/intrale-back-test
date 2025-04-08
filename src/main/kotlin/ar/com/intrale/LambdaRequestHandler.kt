@@ -9,7 +9,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
 import org.kodein.di.instance
-import org.kodein.di.ktor.closestDI
+import org.slf4j.Logger
 import java.lang.NullPointerException
 import kotlin.getValue
 
@@ -24,6 +24,8 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
             val di = DI {
                 import(appModule)
             }
+
+            val logger: Logger by di.instance()
 
             if (requestEvent != null) {
                 var httpMehtod = requestEvent.httpMethod
@@ -43,36 +45,48 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                     var functionName = requestEvent.headers.get("function")
                     val businessName = requestEvent.headers.get("business")
 
+                    logger.info("Function name is $functionName")
+                    logger.info("Business name is $businessName")
+
                     var functionResponse : Response = Response()
 
                     if (businessName == null) {
+                        logger.info("Business name is null")
                         functionResponse = RequestValidationException("No business defined on headers")
                     } else {
                         val config by di.instance<Config>()
                         if (!config.businesses.contains(businessName)){
+                            logger.info("Business not avaiable with name $businessName")
                             functionResponse = ExceptionResponse("Business not avaiable with name $businessName")
                         } else {
                             if (functionName == null) {
+                                logger.info("No function defined on headers")
                                 functionResponse = RequestValidationException("No function defined on headers")
                             } else {
                                 try {
+                                    logger.info("Injecting Function $functionName")
                                     val function by di.instance<Function>(tag = functionName)
                                     runBlocking {
                                         var requestBody:String = ""
                                         try {
                                             requestBody = requestEvent.body;
                                         } catch (e: NullPointerException){
+                                            logger.info("Request body not found")
                                             functionResponse = RequestValidationException("Request body not found")
                                         }
 
                                         if (requestBody != null) {
+                                            logger.info("Request body is $requestBody")
                                             functionResponse = function.execute(requestBody)
                                         }
 
+
                                         body = Gson().toJson(functionResponse)
+                                        logger.info("Returning body is $body")
                                         statusCode = functionResponse.statusCode?.value
                                     }
                                 } catch (e: DI.NotFoundException) {
+                                    logger.info("No function with name $functionName found")
                                     functionResponse = ExceptionResponse("No function with name $functionName found")
                                 }
                             }
@@ -80,6 +94,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                     }
 
                     body = Gson().toJson(functionResponse)
+                    logger.info("Finally returning body is $body")
                     statusCode = functionResponse.statusCode?.value
 
                 }

@@ -5,6 +5,8 @@ import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 val appModule = DI.Module("appModule") {
 
@@ -17,6 +19,10 @@ val appModule = DI.Module("appModule") {
                 awsCognitoClientId = configFactory.getString("aws.cognito.clientId"),
             )
         }
+    }
+
+    bind <Logger> {
+        singleton { LoggerFactory.getLogger("AppLogger") }
     }
 
     bind<Function> (tag="signup") {
