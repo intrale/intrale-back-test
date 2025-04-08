@@ -64,7 +64,8 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                         } catch (e: NullPointerException){
                                             functionResponse = RequestValidationException("Request body not found")
                                         }
-                                        if (requestBody.isNotEmpty()) {
+
+                                        if (requestBody != null) {
                                             functionResponse = function.execute(requestBody)
                                         }
 
