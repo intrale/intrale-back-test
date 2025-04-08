@@ -85,7 +85,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                             }
                                         }
 
-                                        body = Base64.Default.encode(Gson().toJson(functionResponse).encodeToByteArray())
+                                        body = Gson().toJson(functionResponse)
                                         logger.info("Returning body is $body")
                                         statusCode = functionResponse.statusCode?.value
                                     }
@@ -97,7 +97,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                         }
                     }
 
-                    body = Base64.Default.encode(Gson().toJson(functionResponse).encodeToByteArray())
+                    body = Gson().toJson(functionResponse)
                     logger.info("Finally returning body is $body")
                     statusCode = functionResponse.statusCode?.value
 
