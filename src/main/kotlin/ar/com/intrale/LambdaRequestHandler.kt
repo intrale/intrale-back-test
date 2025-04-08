@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
+import java.lang.NullPointerException
 import kotlin.getValue
 
 class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -42,7 +43,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                     var functionName = requestEvent.headers.get("function")
                     val businessName = requestEvent.headers.get("business")
 
-                    var functionResponse : Response
+                    var functionResponse : Response = Response()
 
                     if (businessName == null) {
                         functionResponse = RequestValidationException("No business defined on headers")
@@ -57,7 +58,16 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                 try {
                                     val function by di.instance<Function>(tag = functionName)
                                     runBlocking {
-                                        functionResponse = function.execute(requestEvent.body)
+                                        var requestBody:String = ""
+                                        try {
+                                            requestBody = requestEvent.body;
+                                        } catch (e: NullPointerException){
+                                            functionResponse = RequestValidationException("Request body not found")
+                                        }
+                                        if (requestBody.isNotEmpty()) {
+                                            functionResponse = function.execute(requestBody)
+                                        }
+
                                         body = Gson().toJson(functionResponse)
                                         statusCode = functionResponse.statusCode?.value
                                     }
