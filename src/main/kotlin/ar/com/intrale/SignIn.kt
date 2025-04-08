@@ -14,30 +14,35 @@ import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-class FunctionImpl : Function {
+class SignIn : Function {
 
 
-    override suspend fun execute(textBody:String): FunctionResponse {
+    override suspend fun execute(textBody:String): Response {
 
-        if (textBody.isEmpty()) return FunctionResponse("Request body not found")
+        if (textBody.isEmpty()) return RequestValidationException("Request body not found")
 
-        var body = Gson().fromJson(textBody, FunctionRequest::class.java)
+        var body = Gson().fromJson(textBody, ar.com.intrale.SignUpRequest::class.java)
 
-        var validation = Validation<FunctionRequest> {
-            FunctionRequest::email  {
+        var validation = Validation<ar.com.intrale.SignUpRequest> {
+            ar.com.intrale.SignUpRequest::email  {
                 minLength(1) hint  "El campo email es obligatorio"
                 pattern(".+@.+\\..+") hint "El campo email debe tener formato de email. Valor actual: '{value}'"
             }
         }
 
-        var validationResult: ValidationResult<Any> = validation(body)
+        var validationResult: ValidationResult<Any>
+        try {
+            validationResult = validation(body)
+        } catch (e:Exception){
+            return RequestValidationException("Request is empty")
+        }
 
         if (validationResult.isValid){
 
-            val clientIdVal: String = "1ve1nokbjnmhk1adiben0a9iao"
+            val clientIdVal: String = "11pm8ug3bletqjvdl4omvig43u"
             val secretKey: String = "2i0k4EloPyS2aTsW+YsuxFgTE9vauyCc8bZZeljf"
-            val usernameVal: String = "leolarreta"
-            val passwordVal: String = "asdfasdfasfd"
+            //val usernameVal: String = "usuario1"
+            val passwordVal: String = "Prueba#1"
             val email: String = body.email
 
             val attributeType =
@@ -48,29 +53,38 @@ class FunctionImpl : Function {
 
             val attrs = mutableListOf<AttributeType>()
             attrs.add(attributeType)
-            val secretVal = calculateSecretHash(clientIdVal, secretKey, usernameVal)
+            val secretVal = calculateSecretHash(clientIdVal, secretKey, /*usernameVal*/ email)
 
             val request =
                 SignUpRequest {
                     userAttributes = attrs
-                    username = usernameVal
+                    username = email
                     clientId = clientIdVal
                     password = passwordVal
-                    secretHash = secretVal
+                    //secretHash = secretVal
                 }
-            CognitoIdentityProviderClient { region = "us-east-2" }.use { identityProviderClient ->
-                identityProviderClient.signUp(request)
-                println("User has been signed up")
+
+            try {
+                CognitoIdentityProviderClient {
+                    region = "us-east-2"
+                    credentialsProvider
+                }.use { identityProviderClient ->
+                    identityProviderClient.signUp(request)
+                    println("User has been signed up")
+                }
+            } catch (e:Exception) {
+                return ExceptionResponse(e.message ?: "Internal Server Error")
             }
 
+            return Response()
         }
 
         var errorsMessage: String = ""
         validationResult.errors.forEach {
-            errorsMessage += it.message
+            errorsMessage += ' ' + it.message
         }
 
-        return FunctionResponse(errorsMessage)
+        return RequestValidationException(errorsMessage)
     }
 
 

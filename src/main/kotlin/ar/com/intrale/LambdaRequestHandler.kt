@@ -4,17 +4,22 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
-import io.ktor.utils.io.printStack
+import com.google.gson.Gson
 
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
 import org.kodein.di.instance
+import org.kodein.di.ktor.closestDI
+import kotlin.getValue
 
 class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
 
+    // The request limit most be assigned on Api Gateway
     override fun handleRequest(requestEvent: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent  = APIGatewayProxyResponseEvent().apply {
         try {
+
+
             val di = DI {
                 import(appModule)
             }
@@ -34,15 +39,39 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                 }
 
                 if (httpMehtod == "POST") {
-                    val function by di.instance<FunctionImpl>()
-                    runBlocking {
-                        function.execute(requestEvent.body)
-                        body = "Hello from Kotlin Code"
-                        statusCode = 200
+                    var functionName = requestEvent.headers.get("function")
+                    val businessName = requestEvent.headers.get("business")
 
+                    var functionResponse : Response
+
+                    if (businessName == null) {
+                        functionResponse = RequestValidationException("No business defined on headers")
+                    } else {
+                        val config by di.instance<Config>()
+                        if (!config.businesses.contains(businessName)){
+                            functionResponse = ExceptionResponse("Business not avaiable with name $businessName")
+                        } else {
+                            if (functionName == null) {
+                                functionResponse = RequestValidationException("No function defined on headers")
+                            } else {
+                                try {
+                                    val function by di.instance<Function>("function")
+                                    runBlocking {
+                                        functionResponse = function.execute(requestEvent.body)
+                                        body = Gson().toJson(functionResponse)
+                                        statusCode = functionResponse.statusCode?.value
+                                    }
+                                } catch (e: DI.NotFoundException) {
+                                    functionResponse = ExceptionResponse("No function with name $functionName found")
+                                }
+                            }
+                        }
                     }
-                }
 
+                    body = Gson().toJson(functionResponse)
+                    statusCode = functionResponse.statusCode?.value
+
+                }
 
             }
         } catch (e: Exception) {

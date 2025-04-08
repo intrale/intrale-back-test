@@ -1,9 +1,6 @@
 package ar.com.intrale
 
-class Response {
+import io.ktor.http.HttpStatusCode
 
-    // Initialize status code as OK status by default
-    private val statusCode: Int? = 200
-
-
+open class Response (val statusCode: HttpStatusCode? = HttpStatusCode.OK){
 }

@@ -26,6 +26,10 @@ repositories {
     //Kotless repository
     gradlePluginPortal()
     maven(url = uri("https://packages.jetbrains.team/maven/p/ktls/maven"))
+    maven {
+        url = uri("https://packages.confluent.io/maven")
+        name = "confluence"
+    }
 }
 
 dependencies {
@@ -35,6 +39,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-gson-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("io.github.flaxoos:ktor-server-rate-limiting:1.2.10")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
