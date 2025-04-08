@@ -55,7 +55,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                 functionResponse = RequestValidationException("No function defined on headers")
                             } else {
                                 try {
-                                    val function by di.instance<Function>("function")
+                                    val function by di.instance<Function>(tag = functionName)
                                     runBlocking {
                                         functionResponse = function.execute(requestEvent.body)
                                         body = Gson().toJson(functionResponse)
