@@ -48,7 +48,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                     logger.info("Function name is $functionName")
                     logger.info("Business name is $businessName")
 
-                    var functionResponse : Response = Response()
+                    var functionResponse : Response
 
                     if (businessName == null) {
                         logger.info("Business name is null")
@@ -70,16 +70,18 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                         var requestBody:String = ""
                                         try {
                                             requestBody = requestEvent.body;
-                                        } catch (e: NullPointerException){
-                                            logger.info("Request body not found")
-                                            functionResponse = RequestValidationException("Request body not found")
-                                        }
-
-                                        if (requestBody != null) {
                                             logger.info("Request body is $requestBody")
                                             functionResponse = function.execute(requestBody)
+                                        } catch (e: NullPointerException){
+                                            logger.info("NullPointerException is thrown")
+                                            if (e.message.toString().contains("getBody")){
+                                                logger.info("Request body not found")
+                                                functionResponse = RequestValidationException("Request body not found")
+                                            } else {
+                                                logger.info(e.message)
+                                                functionResponse = ExceptionResponse(e.message.toString())
+                                            }
                                         }
-
 
                                         body = Gson().toJson(functionResponse)
                                         logger.info("Returning body is $body")
