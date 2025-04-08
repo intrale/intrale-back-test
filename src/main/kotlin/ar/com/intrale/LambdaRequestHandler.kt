@@ -12,14 +12,16 @@ import org.kodein.di.instance
 import org.slf4j.Logger
 import java.lang.NullPointerException
 import kotlin.getValue
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
 
     // The request limit most be assigned on Api Gateway
+    @OptIn(ExperimentalEncodingApi::class)
     override fun handleRequest(requestEvent: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent  = APIGatewayProxyResponseEvent().apply {
         try {
-
 
             val di = DI {
                 import(appModule)
@@ -69,7 +71,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                     runBlocking {
                                         var requestBody:String = ""
                                         try {
-                                            requestBody = requestEvent.body;
+                                            requestBody = Base64.Default.decode(requestEvent.body).toString();
                                             logger.info("Request body is $requestBody")
                                             functionResponse = function.execute(requestBody)
                                         } catch (e: NullPointerException){
@@ -83,7 +85,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                             }
                                         }
 
-                                        body = Gson().toJson(functionResponse)
+                                        body = Base64.Default.encode(Gson().toJson(functionResponse).encodeToByteArray())
                                         logger.info("Returning body is $body")
                                         statusCode = functionResponse.statusCode?.value
                                     }
@@ -95,7 +97,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                         }
                     }
 
-                    body = Gson().toJson(functionResponse)
+                    body = Base64.Default.encode(Gson().toJson(functionResponse).encodeToByteArray())
                     logger.info("Finally returning body is $body")
                     statusCode = functionResponse.statusCode?.value
 
