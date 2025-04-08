@@ -71,7 +71,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                     runBlocking {
                                         var requestBody:String = ""
                                         try {
-                                            requestBody = Base64.Default.decode(requestEvent.body).toString();
+                                            requestBody = String(Base64.Default.decode(requestEvent.body));
                                             logger.info("Request body is $requestBody")
                                             functionResponse = function.execute(requestBody)
                                         } catch (e: NullPointerException){
