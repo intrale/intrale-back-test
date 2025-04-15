@@ -29,7 +29,7 @@ jobs:
           USER_POOL_ID: ${{ secrets.USER_POOL_ID }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
         run: |
-          sed -i "s/REGION/${REGION}/gi" ./src/main/resources/application.conf
+          sed -i "s#REGION#${REGION}#gi" ./src/main/resources/application.conf
           sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" ./src/main/resources/application.conf
           sed -i "s/SECRET_ACCESS_KEY/${SECRET_ACCESS_KEY}/gi" ./src/main/resources/application.conf
           sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" ./src/main/resources/application.conf
