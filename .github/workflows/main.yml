@@ -23,7 +23,7 @@ jobs:
       - name: Build with Gradle
         env:
           AVAILABLE_BUISNESS: ${{ secrets.AVAILABLE_BUISNESS }}
-          REGION: ${{ secrets.REGION }}
+          REGION_VALUE: ${{ secrets.REGION }}
           ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
           USER_POOL_ID: ${{ secrets.USER_POOL_ID }}
@@ -31,32 +31,19 @@ jobs:
         run: |
           cd ./src/main/resources/
           echo "paso 1"
-          ESCAPED_VALUE=$(printf '%s\n' "$AVAILABLE_BUISNESS" | sed -e 's/[\/&]/\\&/g')
-          echo "AVAILABLE_BUISNESS=${ESCAPED_VALUE}" | cat -v
           sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" application.conf
           echo "paso 2"
-          ESCAPED_VALUE=$(printf '%s\n' "$REGION" | sed -e 's/[\/&]/\\&/g')
-          echo "REGION=${ESCAPED_VALUE}" | cat -v
-          sed -i "s/REGION/${REGION}/gi" application.conf
+          sed -i "s/REGION_VALUE/${REGION_VALUE}/gi" application.conf
           echo "paso 3"
-          ESCAPED_VALUE=$(printf '%s\n' "$ACCESS_KEY_ID" | sed -e 's/[\/&]/\\&/g')
-          echo "ACCESS_KEY_ID=${ESCAPED_VALUE}" | cat -v
           sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" application.conf
           echo "paso 4"
-          echo "SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}" | cat -v
           ESCAPED_SECRET=$(printf '%s\n' "$SECRET_ACCESS_KEY" | sed -e 's/[\/&]/\\&/g')
-          echo "ESCAPED_SECRET=${ESCAPED_SECRET}" | cat -v
           sed -i "s/SECRET_ACCESS_KEY/${ESCAPED_SECRET}/gi" application.conf
           echo "paso 5"
-          ESCAPED_VALUE=$(printf '%s\n' "$USER_POOL_ID" | sed -e 's/[\/&]/\\&/g')
-          echo "USER_POOL_ID=${ESCAPED_VALUE}" | cat -v
           sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" application.conf
           echo "paso 6"
-          ESCAPED_VALUE=$(printf '%s\n' "$CLIENT_ID" | sed -e 's/[\/&]/\\&/g')
-          echo "CLIENT_ID=${ESCAPED_VALUE}" | cat -v
           sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" application.conf
           echo "paso 7"
-          cat application.conf
           cd ../../../
           ./gradlew shadowJar
       - name: Deploy lambda
