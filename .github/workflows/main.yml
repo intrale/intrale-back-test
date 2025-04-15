@@ -22,12 +22,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: Build with Gradle
         env:
-          AVAILABLE_BUISNESS: ${{ env.AVAILABLE_BUISNESS }}
-          REGION: ${{ env.REGION }}
-          ACCESS_KEY_ID: ${{ env.ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ env.SECRET_ACCESS_KEY }}
-          USER_POOL_ID: ${{ env.USER_POOL_ID }}
-          CLIENT_ID: ${{ env.CLIENT_ID }}
+          AVAILABLE_BUISNESS: ${{ secrets.AVAILABLE_BUISNESS }}
+          REGION: ${{ secrets.REGION }}
+          ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          USER_POOL_ID: ${{ secrets.USER_POOL_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
         run: |
           sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" ./src/main/resources/application.conf
           sed -i "s/REGION/${REGION}/gi" ./src/main/resources/application.conf
