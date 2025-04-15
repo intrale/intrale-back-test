@@ -43,25 +43,29 @@ fun main() {
         }
 
         routing {
-            post("/") {
-                val functionName = call.request.headers["function"]
-                val businessName = call.request.headers["business"]
+            post("/{business}/{function}") {
+                val businessName = call.parameters["business"]
+                val functionName = call.parameters["function"]
 
                 var functionResponse : Response
 
                 if (businessName == null) {
-                    functionResponse = RequestValidationException("No business defined on headers")
+                    functionResponse = RequestValidationException("No business defined on path")
                 } else {
                     val config by closestDI().instance<Config>()
+                    System.out.println("config.businesses:" + config.businesses)
                     if (!config.businesses.contains(businessName)){
                         functionResponse = ExceptionResponse("Business not avaiable with name $businessName")
                     } else {
                         if (functionName == null) {
-                            functionResponse = RequestValidationException("No function defined on headers")
+                            functionResponse = RequestValidationException("No function defined on path")
                         } else {
                             try {
                                 val function by closestDI().instance<Function>(tag = functionName)
-                                functionResponse = function.execute(call.receiveText())
+                                val headers: Map<String, String> = call.request.headers.entries().associate {
+                                    it.key to it.value.joinToString(",")
+                                }
+                                functionResponse = function.execute(businessName, functionName, headers, call.receiveText())
                             } catch (e: DI.NotFoundException) {
                                 functionResponse = ExceptionResponse("No function with name $functionName found")
                             }

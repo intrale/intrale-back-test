@@ -21,7 +21,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       - name: Build with Gradle
-        run: ./gradlew shadowJar
+        env:
+          AVAILABLE_BUISNESS: ${{ env.AVAILABLE_BUISNESS }}
+          REGION: ${{ env.REGION }}
+          ACCESS_KEY_ID: ${{ env.ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ env.SECRET_ACCESS_KEY }}
+          USER_POOL_ID: ${{ env.USER_POOL_ID }}
+          CLIENT_ID: ${{ env.CLIENT_ID }}
+        run: |
+          sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" ./src/main/resources/application.conf
+          sed -i "s/REGION/${REGION}/gi" ./src/main/resources/application.conf
+          sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" ./src/main/resources/application.conf
+          sed -i "s/SECRET_ACCESS_KEY/${SECRET_ACCESS_KEY}/gi" ./src/main/resources/application.conf
+          sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" ./src/main/resources/application.conf
+          sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" ./src/main/resources/application.conf
+          ./gradlew shadowJar
       - name: Deploy lambda
         uses: yvesgurcan/deploy-lambda-function@master
         with:

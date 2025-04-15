@@ -33,6 +33,7 @@ repositories {
 }
 
 dependencies {
+
     implementation("io.ktor:ktor-server-call-logging-jvm")
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
@@ -49,6 +50,7 @@ dependencies {
     implementation(libs.aws.lambda.java.core)
     implementation(libs.aws.lambda.java.events)
     implementation(libs.aws.lambda.java.log4j)
+
 
     implementation("aws.sdk.kotlin:cognitoidentityprovider:1.2.28")
     implementation("aws.sdk.kotlin:cognitoidentity:1.2.28")

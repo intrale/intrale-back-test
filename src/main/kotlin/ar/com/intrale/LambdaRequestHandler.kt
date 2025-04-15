@@ -44,8 +44,8 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                 }
 
                 if (httpMehtod == "POST") {
-                    var functionName = requestEvent.headers.get("function")
-                    val businessName = requestEvent.headers.get("business")
+                    var functionName = requestEvent.headers["function"]
+                    val businessName = requestEvent.headers["business"]
 
                     logger.info("Function name is $functionName")
                     logger.info("Business name is $businessName")
@@ -73,7 +73,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                                         try {
                                             requestBody = String(Base64.Default.decode(requestEvent.body));
                                             logger.info("Request body is $requestBody")
-                                            functionResponse = function.execute(requestBody)
+                                            functionResponse = function.execute(businessName, functionName, requestEvent.headers, requestBody)
                                         } catch (e: NullPointerException){
                                             logger.info("NullPointerException is thrown")
                                             if (e.message.toString().contains("\"textBody\" is null")){

@@ -1,94 +1,161 @@
 package ar.com.intrale
 
+import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.adminUpdateUserAttributes
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AdminGetUserRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType.AdminNoSrpAuth
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType.NewPasswordRequired
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.google.gson.Gson
 import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
-import io.konform.validation.jsonschema.minLength
-import io.konform.validation.jsonschema.pattern
 import net.datafaker.Faker
 import org.slf4j.Logger
-import java.io.UnsupportedEncodingException
-import java.nio.charset.StandardCharsets
-import java.util.*
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
-import kotlin.math.log
 
-class SignIn (val config: Config, val faker: Faker, val logger: Logger) : Function {
+class SignIn(val config: Config, val faker: Faker, val logger: Logger) : Function {
 
 
-    override suspend fun execute(textBody:String): Response {
-
-        if (textBody.isEmpty()) return RequestValidationException("Request body not found")
-
-        logger.info("text body: $textBody")
-        var body = Gson().fromJson(textBody, ar.com.intrale.SignInRequest::class.java)
-
-        var validation = Validation<ar.com.intrale.SignInRequest> {
-            ar.com.intrale.SignInRequest::email required {
-                pattern(".+@.+\\..+") hint "El campo email debe tener formato de email. Valor actual: '{value}'"
-            }
-
-            ar.com.intrale.SignInRequest::password  required {}
+    fun requestValidation(body:SignInRequest): Response? {
+        val validation = Validation<SignInRequest> {
+            SignInRequest::email required {}
+            SignInRequest::password required {}
         }
-
-        var validationResult: ValidationResult<Any>
-        try {
-            validationResult = validation(body)
-        } catch (e:Exception){
+        val validationResult: ValidationResult<Any> = try {
+            validation(body)
+        } catch (e: Exception) {
             e.printStackTrace()
-            return RequestValidationException("Request is empty")
+            return RequestValidationException(e.message ?: "Unknown error")
         }
-
-        if (validationResult.isValid){
-
-            //val clientIdVal: String = "11pm8ug3bletqjvdl4omvig43u"
-            //val secretKey: String = "2i0k4EloPyS2aTsW+YsuxFgTE9vauyCc8bZZeljf"
-            //val usernameVal: String = "usuario1"
-            val passwordVal: String = "Prueba#1"
-            val email: String = body.email
-
-            val attributeType =
-                AttributeType {
-                    this.name = "email"
-                    this.value = email
-                }
-
-            val attrs = mutableListOf<AttributeType>()
-            attrs.add(attributeType)
-
-            val request =
-                AdminGetUserRequest {
-                    userPoolId = config.awsCognitoUserPoolId
-                    username = email
-                }
-
-            try {
-                CognitoIdentityProviderClient {
-                    region = config.region
-                    credentialsProvider
-                }.use { identityProviderClient ->
-                    var user = identityProviderClient.adminGetUser(request)
-                    println("User exists: $user")
-                }
-            } catch (e:Exception) {
-                return ExceptionResponse(e.message ?: "Internal Server Error")
+        if (!validationResult.isValid) {
+            val errorsMessage = validationResult.errors.joinToString(" ") {
+                "${it.dataPath.substring(1)} ${it.message}"
             }
-
-            return Response()
+            return RequestValidationException(errorsMessage)
         }
-
-        var errorsMessage: String = ""
-        validationResult.errors.forEach {
-            errorsMessage += it.dataPath.substring(1) + ' ' + it.message
-        }
-
-        return RequestValidationException(errorsMessage)
+        return null
     }
 
+    override suspend fun execute(business: String, function: String, headers: Map<String, String>, textBody: String): Response {
+        // Validacion del request
+        if (textBody.isEmpty()) return RequestValidationException("Request body not found")
+        val body = Gson().fromJson(textBody, SignInRequest::class.java)
+        val response = requestValidation(body)
+        if (response!=null) return response
 
+        // Se intenta realizar el signin normalmente contra el proveedor de autenticacion
+        try {
+            logger.info("Se intenta realizar el signin normalmente contra el proveedor de autenticacion")
+            CognitoIdentityProviderClient {
+                region = config.region
+                credentialsProvider = StaticCredentialsProvider(Credentials(
+                    accessKeyId = config.accessKeyId,
+                    secretAccessKey = config.secretAccessKey
+                ))
+            }.use { identityProviderClient ->
+                var authResponse = identityProviderClient.adminInitiateAuth(
+                    AdminInitiateAuthRequest {
+                        authFlow = AdminNoSrpAuth
+                        clientId = config.awsCognitoClientId
+                        userPoolId = config.awsCognitoUserPoolId
+                        authParameters = mapOf("USERNAME" to body.email, "PASSWORD" to body.password)
+                })
+
+                // Validar respuesta luego del intento de login
+                logger.info("Validar respuesta luego del intento de login: " + authResponse.challengeName?.value)
+                if("NEW_PASSWORD_REQUIRED".equals(authResponse.challengeName?.value)) {
+                    // Valido que el request contenga la nueva password
+                    if (body.newPassword == null) {
+                        return RequestValidationException("newPassword is required")
+                    }
+                    if (body.name == null) {
+                        return RequestValidationException("name is required")
+                    }
+                    if (body.familyName == null) {
+                        return RequestValidationException("familyName is required")
+                    }
+
+                    // Invocamos al cambio de contraseña
+                    logger.info("Invocamos al cambio de contraseña")
+                    val respondToAuthChallenge = identityProviderClient.adminRespondToAuthChallenge(
+                        AdminRespondToAuthChallengeRequest {
+                            challengeName = NewPasswordRequired
+                            userPoolId = config.awsCognitoUserPoolId
+                            clientId = config.awsCognitoClientId
+                            challengeResponses = mapOf(
+                                "USERNAME" to body.email,
+                                "NEW_PASSWORD" to body.newPassword
+                            )
+                            session = authResponse.session
+                        })
+
+                    // Invocamos la actualizacion de atributos
+                    val updateUserAttributesResponse = identityProviderClient.adminUpdateUserAttributes (
+                        AdminUpdateUserAttributesRequest {
+                            userPoolId = config.awsCognitoUserPoolId
+                            username = body.email
+                            userAttributes = listOf(
+                                AttributeType {
+                                    name = "name"
+                                    value = body.name
+                                },
+                                AttributeType {
+                                    name = "family_name"
+                                    value = body.familyName
+                                },
+                                AttributeType {
+                                    name = "email_verified"
+                                    value = "true"
+                                }
+                            )
+                        })
+
+                    // Autenticamos con la nueva contraseña
+                    authResponse = identityProviderClient.adminInitiateAuth(
+                        AdminInitiateAuthRequest {
+                            authFlow = AdminNoSrpAuth
+                            clientId = config.awsCognitoClientId
+                            userPoolId = config.awsCognitoUserPoolId
+                            authParameters = mapOf("USERNAME" to body.email, "PASSWORD" to body.newPassword)
+                        })
+
+                }
+
+                // Obtenemos la informacion del usuario
+                logger.info("Obtenemos la informacion del usuario")
+                val user = identityProviderClient.adminGetUser(AdminGetUserRequest {
+                    userPoolId = config.awsCognitoUserPoolId
+                    username = body.email
+                })
+
+                val businesses = user.userAttributes?.find { it.name == "profile" }?.value
+                logger.info("businesses: $businesses")
+                if (businesses?.contains(business) == false){
+                    return UnauthorizeExeption()
+                }
+
+                logger.info("retornando tokens")
+                return SignInResponse(
+                    idToken = authResponse.authenticationResult?.idToken.toString(),
+                    accessToken = authResponse.authenticationResult?.accessToken.toString(),
+                    refreshToken = authResponse.authenticationResult?.refreshToken.toString()
+                )
+
+            }
+        } catch (e: NotAuthorizedException) {
+            logger.error("Error al consultar Cognito: ${e.message}", e)
+            return UnauthorizeExeption()
+        } catch (e: Exception) {
+            logger.error("Error al consultar Cognito: ${e.message}", e)
+            return ExceptionResponse(e.message ?: "Internal Server Error")
+        }
+        //TODO: Returning nothing
+        logger.info("SignIn:Returning nothing")
+        return ExceptionResponse("Unknown error")
+    }
 }
