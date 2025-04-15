@@ -54,7 +54,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
 
                     if (businessName == null) {
                         logger.info("Business name is null")
-                        functionResponse = RequestValidationException("No business defined on headers")
+                        functionResponse = RequestValidationException("No business defined on path")
                     } else {
                         val config by di.instance<Config>()
                         if (!config.businesses.contains(businessName)){
@@ -63,7 +63,7 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                         } else {
                             if (functionName == null) {
                                 logger.info("No function defined on headers")
-                                functionResponse = RequestValidationException("No function defined on headers")
+                                functionResponse = RequestValidationException("No function defined on path")
                             } else {
                                 try {
                                     logger.info("Injecting Function $functionName")
