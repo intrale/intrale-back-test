@@ -44,8 +44,8 @@ class LambdaRequestHandler  : RequestHandler<APIGatewayProxyRequestEvent, APIGat
                 }
 
                 if (httpMehtod == "POST") {
-                    var functionName = requestEvent.headers["function"]
-                    val businessName = requestEvent.headers["business"]
+                    var functionName = requestEvent.pathParameters["function"]
+                    val businessName = requestEvent.pathParameters["business"]
 
                     logger.info("Function name is $functionName")
                     logger.info("Business name is $businessName")
