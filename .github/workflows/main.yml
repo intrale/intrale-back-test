@@ -30,13 +30,21 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
         run: |
           cd ./src/main/resources/
+          echo "paso 1"
           sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" application.conf
+          echo "paso 2"
           sed -i "s/REGION/${REGION}/gi" application.conf
+          echo "paso 3"
           sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" application.conf
+          echo "paso 4"
+          sed -i "s/SECRET_ACCESS_KEY/${SECRET_ACCESS_KEY}/gi" application.conf
+          echo "paso 5"
           ESCAPED_SECRET=$(printf '%s\n' "$SECRET_ACCESS_KEY" | sed -e 's/[\/&]/\\&/g')
           sed -i "s/SECRET_ACCESS_KEY/${ESCAPED_SECRET}/gi" application.conf
           sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" application.conf
+          echo "paso 6"
           sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" application.conf
+          echo "paso 7"
           cat application.conf
           cd ../../../
           ./gradlew shadowJar
