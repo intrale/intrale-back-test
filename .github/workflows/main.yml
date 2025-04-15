@@ -29,13 +29,15 @@ jobs:
           USER_POOL_ID: ${{ secrets.USER_POOL_ID }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
         run: |
-          sed -i "s#REGION#${REGION}#gi" ./src/main/resources/application.conf
-          sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" ./src/main/resources/application.conf
-          sed -i "s/SECRET_ACCESS_KEY/${SECRET_ACCESS_KEY}/gi" ./src/main/resources/application.conf
-          sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" ./src/main/resources/application.conf
-          sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" ./src/main/resources/application.conf
-          sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" ./src/main/resources/application.conf
-          cat ./src/main/resources/application.conf
+          cd ./src/main/resources/
+          sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" application.conf
+          sed -i "s/REGION/${REGION}/gi" application.conf
+          sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" application.conf
+          sed -i "s/SECRET_ACCESS_KEY/${SECRET_ACCESS_KEY}/gi" application.conf
+          sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" application.conf
+          sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" application.conf
+          cat application.conf
+          cd ../../../
           ./gradlew shadowJar
       - name: Deploy lambda
         uses: yvesgurcan/deploy-lambda-function@master
