@@ -29,6 +29,7 @@ jobs:
           USER_POOL_ID: ${{ secrets.USER_POOL_ID }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
         run: |
+          echo "AVAILABLE_BUISNESS:" + ${AVAILABLE_BUISNESS}
           sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" ./src/main/resources/application.conf
           sed -i "s/REGION/${REGION}/gi" ./src/main/resources/application.conf
           sed -i "s/ACCESS_KEY_ID/${ACCESS_KEY_ID}/gi" ./src/main/resources/application.conf
