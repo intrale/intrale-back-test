@@ -35,6 +35,7 @@ jobs:
           sed -i "s/SECRET_ACCESS_KEY/${SECRET_ACCESS_KEY}/gi" ./src/main/resources/application.conf
           sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" ./src/main/resources/application.conf
           sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" ./src/main/resources/application.conf
+          cat ./src/main/resources/application.conf
           ./gradlew shadowJar
       - name: Deploy lambda
         uses: yvesgurcan/deploy-lambda-function@master
