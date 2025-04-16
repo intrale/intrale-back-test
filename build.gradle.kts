@@ -86,6 +86,10 @@ publishing {
         maven {
             name = "github"
             url = uri("https://maven.pkg.github.com/intrale/repo")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }

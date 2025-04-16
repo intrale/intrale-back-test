@@ -30,6 +30,8 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           MAVEN_SERVER_USERNAME: ${{ secrets.MAVEN_SERVER_USERNAME }}
           MAVEN_SERVER_PASSWORD: ${{ secrets.MAVEN_SERVER_PASSWORD }}
+          GPR_USER: ${{ secrets.GPR_USER }}
+          GPR_KEY: ${{ secrets.GPR_KEY }}
         run: |
           cd ./src/main/resources/
           sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" application.conf
@@ -40,6 +42,8 @@ jobs:
           sed -i "s/USER_POOL_ID/${USER_POOL_ID}/gi" application.conf
           sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" application.conf
           cd ../../../
+          sed -i "s/GPR_USER/${GPR_USER}/gi" gradle.properties
+          sed -i "s/GPR_KEY/${GPR_KEY}/gi" gradle.properties
           ./gradlew shadowJar
           ./gradlew publish -PmySecureRepositoryUsername=${MAVEN_SERVER_USERNAME} -PmySecureRepositoryPassword=${MAVEN_SERVER_PASSWORD}
       - name: Deploy lambda
