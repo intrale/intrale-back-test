@@ -5,6 +5,9 @@ plugins {
     kotlin("jvm") version "2.0.20"
     id("io.ktor.plugin") version "2.3.12"
     id("com.github.johnrengelman.shadow") version "8.1.1"
+
+    `maven-publish`   // permite publicar artefactos como .jar
+    `java-library`    // opcional, útil si estás creando una librería reutilizable
 }
 
 group = "ar.com.intrale"
@@ -22,6 +25,7 @@ application {
 }
 
 repositories {
+    maven(url = uri("https://maven.pkg.github.com/intrale/repo"))
     mavenCentral()
     //Kotless repository
     gradlePluginPortal()
@@ -67,4 +71,21 @@ dependencies {
 
     // Faker
     implementation("net.datafaker:datafaker:2.4.2")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJar") {
+            from(components["java"])
+            groupId = "ar.com.intrale"
+            artifactId = "intrale-backend"
+            version = "0.0.1"
+        }
+    }
+    repositories {
+        maven {
+            name = "github"
+            url = uri("https://maven.pkg.github.com/intrale/repo")
+        }
+    }
 }

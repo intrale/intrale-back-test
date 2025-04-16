@@ -39,6 +39,7 @@ jobs:
           sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" application.conf
           cd ../../../
           ./gradlew shadowJar
+          ./gradlew publish
       - name: Deploy lambda
         uses: yvesgurcan/deploy-lambda-function@master
         with:
