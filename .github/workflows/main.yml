@@ -28,6 +28,8 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
           USER_POOL_ID: ${{ secrets.USER_POOL_ID }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          MAVEN_SERVER_USERNAME: ${{ secrets.MAVEN_SERVER_USERNAME }}
+          MAVEN_SERVER_PASSWORD: ${{ secrets.MAVEN_SERVER_PASSWORD }}
         run: |
           cd ./src/main/resources/
           sed -i "s/AVAILABLE_BUISNESS/${AVAILABLE_BUISNESS}/gi" application.conf
@@ -39,7 +41,7 @@ jobs:
           sed -i "s/CLIENT_ID/${CLIENT_ID}/gi" application.conf
           cd ../../../
           ./gradlew shadowJar
-          ./gradlew publish
+          ./gradlew publish -PmySecureRepositoryUsername=${MAVEN_SERVER_USERNAME} -PmySecureRepositoryPassword=${MAVEN_SERVER_PASSWORD}
       - name: Deploy lambda
         uses: yvesgurcan/deploy-lambda-function@master
         with:
